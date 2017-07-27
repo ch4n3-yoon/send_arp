@@ -86,7 +86,8 @@ int main(int argc,  char * argv[])
 		}
 
 		/* set network interface */
-		strncpy(network_interface, argv[1], NET_INF_LEN);
+		strncpy(network_interface, argv[1], NET_INF_LEN-1);
+		network_interface[NET_INF_LEN - 1] = '\0';
 		sprintf(address_file, "/sys/class/net/%s/address", network_interface);
 
 		/* the argv[1] is not network interface */
