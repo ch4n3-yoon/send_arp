@@ -63,7 +63,7 @@ typedef struct arp_header
 int main(int argc,  char * argv[])
 {
 	char network_interface[NET_INF_LEN];
-	char addressFile[NET_INF_LEN + strlen("/sys/class/net//address")];
+	char address_file[NET_INF_LEN + strlen("/sys/class/net//address")];
 
 	/* check argv */
 	if (argc < 4)
@@ -84,7 +84,14 @@ int main(int argc,  char * argv[])
 
 		/* set network interface */
 		network_interface = argv[1];
+		sprintf(address_file, "/sys/class/net/%s/address", network_interface);
 
+		/* the argv[1] is not network interface */
+		if ( !essetFile(address_file) )
+		{
+			printf("[-] '%s' isn't the Network Interface.\n", argv[1]);
+			return 1;
+		}
 	}
 
 
