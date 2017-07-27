@@ -64,6 +64,9 @@ int main(int argc,  char * argv[])
 {
 	char network_interface[NET_INF_LEN];
 	char address_file[NET_INF_LEN + strlen("/sys/class/net//address")];
+	FILE * fd;
+	char mac_addr[16];
+
 
 	/* check argv */
 	if (argc < 4)
@@ -94,8 +97,14 @@ int main(int argc,  char * argv[])
 		}
 	}
 
+	fd = fopen(address_file, "r");
+	fscanf(fd, "%s", mac_addr);
+
+	printf("[*] Network Interface : %s\n", argv[1]);
+	printf("[*] Mac Address : %s\n", mac_addr);
 
 
+	return 0;
 }
 
 
