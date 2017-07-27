@@ -37,7 +37,7 @@ bob@gilgil.net 계정으로 자신의 git repository 주소를 알려 줄 것.
 
 /* Function Declaration */
 
-int essetFile(const char *fname)
+int essetFile(const char *fname);
 
 /* Function Declaration */
 
@@ -57,7 +57,7 @@ typedef struct arp_header
 	u_char 		spa[4];	/* Sender IP address */
 	u_char 		tha[6];	/* Target MAC address */
 	u_char 		tpa[4];	/* Target IP address */
-} arphdr_t;
+};
 
 
 int main(int argc,  char * argv[])
@@ -86,7 +86,7 @@ int main(int argc,  char * argv[])
 		}
 
 		/* set network interface */
-		network_interface = argv[1];
+		strncpy(network_interface, argv[1], NET_INF_LEN);
 		sprintf(address_file, "/sys/class/net/%s/address", network_interface);
 
 		/* the argv[1] is not network interface */
