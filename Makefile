@@ -1,4 +1,4 @@
 CC = gcc
 
-pcap_test : send_arp.c
-gcc -o pcap_test pcap_test.c -lpcap -w
+send_arp : send_arp.c
+	gcc -o send_arp send_arp.c -lpcap -w
