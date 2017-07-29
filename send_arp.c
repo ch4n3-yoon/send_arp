@@ -2,6 +2,8 @@
 #include <pcap.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <inttypes.h>
 
 /*
 [리포트]
@@ -65,7 +67,8 @@ int main(int argc,  char * argv[])
 	char network_interface[NET_INF_LEN];
 	char address_file[NET_INF_LEN + strlen("/sys/class/net//address")];
 	FILE * fd;
-	char mac_addr[16];
+	char mac_addr[16];			/* variable for mac address */
+	u_int8_t mac_address[6];	/* variable for mac address */
 
 
 	/* check argv */
