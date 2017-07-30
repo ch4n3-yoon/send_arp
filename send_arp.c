@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <arpa/inet.h> /*ntop_inet*/
 
 /*
 [리포트]
@@ -48,18 +49,33 @@ int essetFile(const char *fname);
 
 #define ARP_REQUEST 1	/* ARP Request */
 #define ARP_REPLY	2	/* ARP Reply */
-typedef struct arp_header
+/*typedef struct arp_header
 {
-	u_int16_t	htype;	/* Hardware Type */
-	u_int16_t	ptype;	/* Protocol Type*/
-	u_char		hlen;	/* Hardware Address Length */
-	u_char		plen;	/* Protocol Address Length */
-	u_int16_t	oper;	/* Operation Code */
-	u_char 		sha[6];	/* Sender MAC address */
-	u_char 		spa[4];	/* Sender IP address */
-	u_char 		tha[6];	/* Target MAC address */
-	u_char 		tpa[4];	/* Target IP address */
+	u_int16_t	htype;	*//* Hardware Type *//*
+	u_int16_t	ptype;	*//* Protocol Type*//*
+	u_char		hlen;	*//* Hardware Address Length *//*
+	u_char		plen;	*//* Protocol Address Length *//*
+	u_int16_t	oper;	*//* Operation Code *//*
+	u_char 		sha[6];	*//* Sender MAC address *//*
+	u_char 		spa[4];	*//* Sender IP address *//*
+	u_char 		tha[6];	*//* Target MAC address *//*
+	u_char 		tpa[4];	*//* Target IP address *//*
+};*/
+
+/* ARP Header */
+typedef struct _arp_hdr arp_hdr;
+struct _arp_hdr {
+	uint16_t htype;
+	uint16_t ptype;
+	uint8_t hlen;
+	uint8_t plen;
+	uint16_t opcode;
+	uint8_t sender_mac[6];
+	uint8_t sender_ip[4];
+	uint8_t target_mac[6];
+	uint8_t target_ip[4];
 };
+
 
 
 int main(int argc,  char * argv[])
@@ -67,8 +83,10 @@ int main(int argc,  char * argv[])
 	char network_interface[NET_INF_LEN];
 	char address_file[NET_INF_LEN + strlen("/sys/class/net//address")];
 	FILE * fd;
+	char address[16];			/* variable for check whether valid ipv4 address */
+	int result;					/* variable for storing some functions */
 	char mac_addr[16];			/* variable for mac address */
-	u_int8_t mac_address[6];	/* variable for mac address */
+	uint8_t mac_address[6];		/* variable for mac address */
 
 
 	/* check argv */
@@ -101,11 +119,34 @@ int main(int argc,  char * argv[])
 		}
 	}
 
+
+	/* check whether ip address is valid */
+	/* sender ip */
+	result = inet_pton(AF_INET, argv[2], address);
+	if (result == -1)
+	{
+		printf("[-] Your argv[2] : '%s'\n", argv[2]);
+		printf("\tIs it valid IPv4 address?\n");
+
+		return 1;
+	}
+
+	/* target ip */
+	result = inet_pton(AF_INET, argv[3], address);
+	if (result == -1)
+	{
+		printf("[-] Your argv[3] : '%s'\n", argv[2]);
+		printf("\tIs it valid IPv4 address?\n");
+	}
+
 	fd = fopen(address_file, "r");
 	fscanf(fd, "%s", mac_addr);
 
 	printf("[*] Network Interface : %s\n", argv[1]);
 	printf("[*] Mac Address : %s\n", mac_addr);
+
+
+
 
 
 	return 0;
