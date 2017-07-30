@@ -40,7 +40,7 @@ bob@gilgil.net 계정으로 자신의 git repository 주소를 알려 줄 것.
 
 /* Function Declaration */
 
-int essetFile(const char *fname);
+int getMacAddress(char * interface, char * buf);
 
 /* Function Declaration */
 
@@ -80,8 +80,8 @@ struct _arp_hdr {
 
 int main(int argc,  char * argv[])
 {
-	char network_interface[NET_INF_LEN];
-	char address_file[NET_INF_LEN + strlen("/sys/class/net//address")];
+
+
 	FILE * fd;
 	char address[16];			/* variable for check whether valid ipv4 address */
 	int result;					/* variable for storing some functions */
@@ -97,28 +97,18 @@ int main(int argc,  char * argv[])
 		return 1;
 	}
 
-	else
+	/* Network Interface : Length limit */
+	if (strlen(argv[1]) > NET_INF_LEN)
 	{
-		/* Network Interface : Length limit */
-		if (strlen(argv[1]) > NET_INF_LEN)
-		{
-			printf("[-] Error : Network Interface must not exceed 50 characters.\n");
-			return 1;
-		}
-
-		/* set network interface */
-		strncpy(network_interface, argv[1], NET_INF_LEN-1);
-		network_interface[NET_INF_LEN - 1] = '\0';
-		sprintf(address_file, "/sys/class/net/%s/address", network_interface);
-
-		/* the argv[1] is not network interface */
-		if ( !essetFile(address_file) )
-		{
-			printf("[-] '%s' isn't the Network Interface.\n", argv[1]);
-			return 1;
-		}
+		printf("[-] Error : Network Interface must not exceed 50 characters.\n");
+		return 1;
 	}
 
+	result = getMacAddress(argv[1], mac_addr);
+	if (result == -1)
+	{
+		return 1;
+	}
 
 	/* check whether ip address is valid */
 	/* sender ip */
@@ -139,9 +129,6 @@ int main(int argc,  char * argv[])
 		printf("\tIs it valid IPv4 address?\n");
 	}
 
-	fd = fopen(address_file, "r");
-	fscanf(fd, "%s", mac_addr);
-
 	printf("[*] Network Interface : %s\n", argv[1]);
 	printf("[*] Mac Address : %s\n", mac_addr);
 
@@ -152,16 +139,32 @@ int main(int argc,  char * argv[])
 	return 0;
 }
 
-
-
-int essetFile(const char *fname)
+int getMacAddress(char * interface, char * buf)
 {
-	FILE *file;
+	char network_interface[NET_INF_LEN];
+	char address_file[NET_INF_LEN + strlen("/sys/class/net//address")];
 
-	if (file = fopen(fname, "r"))
+	FILE *fd;
+
+	/* get network interface from argv */
+	strncpy(network_interface, interface, NET_INF_LEN-1);
+	network_interface[NET_INF_LEN - 1] = '\0';
+
+	/* get mac address from this file */
+	sprintf(address_file, "/sys/class/net/%s/address", network_interface);
+
+	/* file open success */
+	if (fd = fopen(address_file, "r"))
 	{
-		fclose(file);
-		return 1;
+		fscanf(fd, "%s", buf);
+		fclose(fd);
+	}
+
+	/* file open failed */
+	else
+	{
+		printf("[-] '%s' isn't the Network Interface.\n", interface);
+		return -1;
 	}
 
 	return 0;
