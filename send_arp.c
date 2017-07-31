@@ -128,6 +128,7 @@ int main(int argc,  char * argv[])
     pcap_t * handle;	/* create handle */
 
 	struct arp_hdr * arp;
+	uint8_t * temp;
 
 
 	/* check argv */
@@ -199,25 +200,24 @@ int main(int argc,  char * argv[])
 
 
 	/*void get_mac_from_ip (pcap_t * handle, uint8_t * mymac, uint8_t * target_ip )*/
-	arp = get_mac_from_ip(handle, mac_address, target_ip);
-	target_mac = (arp_hdr *)(&arp)->arp_srceth;
-
-
-	arp = get_mac_from_ip(handle, mac_address, sender_ip);
-	sender_mac = arp->arp_srceth;
-
+	temp = get_mac_from_ip(handle, mac_address, target_ip);
+	
 	for(int i=0; i < 6; i++)
 	{
-		printf("%02x:", target_mac[i]);
-	}
-	printf("\n");
-
-	for(int i=0; i < 6; i++)
-	{
-		printf("%02x:", sender_mac[i]);
+		printf("%02x:", temp[i]);
 	}
 
 	printf("\n");
+
+	temp = get_mac_from_ip(handle, mac_address, sender_ip);
+
+	for(int i=0; i < 6; i++)
+	{
+		printf("%02x:", temp[i]);
+	}
+	printf("\n");
+
+
 
 
 	return 0;
@@ -387,7 +387,7 @@ arp_hdr * get_mac_from_ip (pcap_t * handle, uint8_t * mymac, uint8_t * target_ip
 		printf("%02x:", arp->arp_srceth[i]);
 	}
 
-	return arp;
+	return arp->arp_srceth;
 
 }
 
