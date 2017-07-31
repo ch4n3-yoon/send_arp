@@ -49,7 +49,7 @@ int 	getMacAddress(char * interface, char * buf);
 void 	get_remote_mac_address(char * ip);
 void	arp_request(pcap_t * handle, char * mymac, uint8_t * targetip);
 void arp_reply(pcap_t * handle, uint8_t * my_eth, uint8_t * dst_eth, uint8_t * dst_ip);
-void get_mac_from_ip (pcap_t * handle, uint8_t * mymac, uint8_t * target_ip );
+
 
 /* Function Declaration */
 
@@ -98,6 +98,7 @@ typedef struct {
 	unsigned char	padding[ARP_PADDING];
 } arp_hdr;
 
+arp_hdr * get_mac_from_ip (pcap_t * handle, uint8_t * mymac, uint8_t * target_ip );
 
 unsigned char * ethbroadcast = "\xff\xff\xff\xff\xff\xff";
 unsigned char	ethnull[] = {0, 0, 0, 0, 0, 0};
@@ -116,12 +117,17 @@ int main(int argc,  char * argv[])
 	uint8_t sender_ip[4];
 	uint8_t target_ip[4];
 
+	uint8_t sender_mac[6];
+	uint8_t target_mac[6];
+
 
     char error_buffer[PCAP_ERRBUF_SIZE];    /* for printing error string */
 
 
 
     pcap_t * handle;	/* create handle */
+
+	struct arp_hdr * arp;
 
 
 	/* check argv */
@@ -187,10 +193,31 @@ int main(int argc,  char * argv[])
 	}
 
 
-	arp_request(handle, mac_address, target_ip);
 	/*void arp_reply(pcap_t * handle, uint8_t * my_eth, uint8_t * dst_eth, uint8_t * dst_ip)*/
 	arp_reply(handle, mac_address, "\xde\xad\xbe\xef\xff\xff", target_ip);
 
+
+
+	/*void get_mac_from_ip (pcap_t * handle, uint8_t * mymac, uint8_t * target_ip )*/
+	arp = get_mac_from_ip(handle, mac_address, target_ip);
+	target_mac = (arp_hdr *)(&arp)->arp_srceth;
+
+
+	arp = get_mac_from_ip(handle, mac_address, sender_ip);
+	sender_mac = arp->arp_srceth;
+
+	for(int i=0; i < 6; i++)
+	{
+		printf("%02x:", target_mac[i]);
+	}
+	printf("\n");
+
+	for(int i=0; i < 6; i++)
+	{
+		printf("%02x:", sender_mac[i]);
+	}
+
+	printf("\n");
 
 
 	return 0;
@@ -228,6 +255,7 @@ int getMacAddress(char * interface, char * buf)
 		printf("[-] '%s' isn't the Network Interface.\n", interface);
 		return -1;
 	}
+
 
 
 
@@ -303,8 +331,10 @@ void arp_reply(pcap_t * handle, uint8_t * my_eth, uint8_t * dst_eth, uint8_t * d
 
 
 
+
+
 /* send arp */
-void get_mac_from_ip (pcap_t * handle, uint8_t * mymac, uint8_t * target_ip )
+arp_hdr * get_mac_from_ip (pcap_t * handle, uint8_t * mymac, uint8_t * target_ip )
 {
 
 	int result = 0;
@@ -315,7 +345,7 @@ void get_mac_from_ip (pcap_t * handle, uint8_t * mymac, uint8_t * target_ip )
 
 	bpf_u_int32 net; /* The IP of our sniffing device */
 
-	char filter_exp[] = "ether proto arp";
+	char filter_exp[] = "arp";
 	const u_char *packet; // The actual packet
 
 	arp_hdr * arp;
@@ -340,17 +370,24 @@ void get_mac_from_ip (pcap_t * handle, uint8_t * mymac, uint8_t * target_ip )
 		return 1;
 	}
 
+
 	// grab a packet
 	packet = pcap_next(handle, &header);
 
+	if (packet == NULL)
+	{
+		printf("[-] Arp Packet capturing failed.\n");
+		return 1;
+	}
+
 	arp = (struct arp_hdr *)(packet);
 
-
-	for(i=0; i < ETHER_ADDR_LEN; i++)
+	for(i=0; i < 6; i++)
 	{
-		printf("%02x:", arp->arp_dsteth[i]);
+		printf("%02x:", arp->arp_srceth[i]);
 	}
-	printf("\b \n");
+
+	return arp;
 
 }
 
