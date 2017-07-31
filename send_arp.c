@@ -42,6 +42,7 @@ bob@gilgil.net 계정으로 자신의 git repository 주소를 알려 줄 것.
 
 int 	getMacAddress(char * interface, char * buf);
 void 	get_remote_mac_address(char * ip);
+void	arp_request(pcap_t * handle, char * ip);
 
 /* Function Declaration */
 
@@ -196,5 +197,10 @@ int getMacAddress(char * interface, char * buf)
 void get_remote_mac_address(char * ip)
 {
 
+}
+
+void arp_request(pcap_t * handle, char * ip)
+{
+	
 }
 
