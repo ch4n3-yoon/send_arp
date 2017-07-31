@@ -48,6 +48,7 @@ bob@gilgil.net 계정으로 자신의 git repository 주소를 알려 줄 것.
 int 	getMacAddress(char * interface, char * buf);
 void 	get_remote_mac_address(char * ip);
 void	arp_request(pcap_t * handle, char * mymac, uint8_t * targetip);
+void arp_reply(pcap_t * handle, uint8_t * my_eth, uint8_t * dst_eth, uint8_t * dst_ip);
 
 /* Function Declaration */
 
@@ -264,5 +265,36 @@ void arp_request(pcap_t * handle, char * mymac, uint8_t * targetip)
 
 }
 
+
+
+void arp_reply(pcap_t * handle, uint8_t * my_eth, uint8_t * dst_eth, uint8_t * dst_ip)
+{
+	arp_hdr packet;
+
+	memcpy(packet.eth_dst, dst_eth, 6);
+	memcpy(packet.eth_src, my_eth, 6);
+	packet.eth_type = ETH_ARP;
+
+	packet.arp_ethtype = 0x0100;
+	packet.arp_iptype = ETH_IP;
+	packet.arp_ethlen = 6;
+	packet.arp_iplen = 4;
+
+	packet.arp_op = 0x0200;
+
+	memcpy(packet.arp_srceth, my_eth, 6);
+	memcpy(packet.arp_srcip, "\xc0\xa8\x34\x86", 4);
+
+	memcpy(packet.arp_dsteth, dst_eth, 6);
+	memcpy(packet.arp_dstip, dst_ip, 4);
+
+	memset(packet.padding, 0, 18);
+
+	if ( pcap_sendpacket(handle, (uint8_t *) &packet, sizeof(packet)) != 0)
+	{
+		fprintf(stderr, "Error  \n", pcap_geterr(handle));
+	}
+
+}
 
 
