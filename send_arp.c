@@ -308,12 +308,21 @@ void get_mac_from_ip (pcap_t * handle, uint8_t * mymac, uint8_t * target_ip )
 {
 
 	int result = 0;
+	int i = 0;
+
 	struct bpf_program fp;
+	struct pcap_pkthdr header; // The header that pcap gi
+
 	bpf_u_int32 net; /* The IP of our sniffing device */
 
 	char filter_exp[] = "ether proto arp";
+	const u_char *packet; // The actual packet
 
+	arp_hdr * arp;
+
+	/* send arp request */
 	arp_request(handle, mymac, target_ip);
+
 
 	result = pcap_compile(handle, &fp, filter_exp, 0, net);
 	if ( result == -1 )
@@ -331,7 +340,17 @@ void get_mac_from_ip (pcap_t * handle, uint8_t * mymac, uint8_t * target_ip )
 		return 1;
 	}
 
+	// grab a packet
+	packet = pcap_next(handle, &header);
 
+	arp = (struct arp_hdr *)(packet);
+
+
+	for(i=0; i < ETHER_ADDR_LEN; i++)
+	{
+		printf("%02x:", arp->arp_dsteth[i]);
+	}
+	printf("\b \n");
 
 }
 
