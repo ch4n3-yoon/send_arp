@@ -49,6 +49,7 @@ int 	getMacAddress(char * interface, char * buf);
 void 	get_remote_mac_address(char * ip);
 void	arp_request(pcap_t * handle, char * mymac, uint8_t * targetip);
 void arp_reply(pcap_t * handle, uint8_t * my_eth, uint8_t * dst_eth, uint8_t * dst_ip);
+void get_mac_from_ip (pcap_t * handle, uint8_t * mymac, uint8_t * target_ip );
 
 /* Function Declaration */
 
@@ -119,6 +120,7 @@ int main(int argc,  char * argv[])
     char error_buffer[PCAP_ERRBUF_SIZE];    /* for printing error string */
 
 
+
     pcap_t * handle;	/* create handle */
 
 
@@ -186,6 +188,8 @@ int main(int argc,  char * argv[])
 
 
 	arp_request(handle, mac_address, target_ip);
+	/*void arp_reply(pcap_t * handle, uint8_t * my_eth, uint8_t * dst_eth, uint8_t * dst_ip)*/
+	arp_reply(handle, mac_address, "\xde\xad\xbe\xef\xff\xff", target_ip);
 
 
 
@@ -290,11 +294,44 @@ void arp_reply(pcap_t * handle, uint8_t * my_eth, uint8_t * dst_eth, uint8_t * d
 
 	memset(packet.padding, 0, 18);
 
-	if ( pcap_sendpacket(handle, (uint8_t *) &packet, sizeof(packet)) != 0)
+	if ( pcap_sendpacket(handle, (uint8_t *)&packet, sizeof(packet)   ) != 0)
 	{
 		fprintf(stderr, "Error  \n", pcap_geterr(handle));
 	}
 
 }
 
+
+
+/* send arp */
+void get_mac_from_ip (pcap_t * handle, uint8_t * mymac, uint8_t * target_ip )
+{
+
+	int result = 0;
+	struct bpf_program fp;
+	bpf_u_int32 net; /* The IP of our sniffing device */
+
+	char filter_exp[] = "ether proto arp";
+
+	arp_request(handle, mymac, target_ip);
+
+	result = pcap_compile(handle, &fp, filter_exp, 0, net);
+	if ( result == -1 )
+	{
+		printf("[-] Filter Error (your filter = %s) : %s\n", filter_exp, pcap_geterr(handle));
+		return 1;
+	}
+
+	// pcap_setfilter() returns 0 on success and -1 on failure.
+	result = pcap_setfilter(handle, &fp);
+
+	if( result == -1 ) 				// This code means pcap_setfilter() returns false.
+	{
+		printf("[-] Filter Error (your fileter = %s) : %s\n", filter_exp, pcap_geterr(handle));
+		return 1;
+	}
+
+
+
+}
 
