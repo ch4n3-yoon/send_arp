@@ -40,41 +40,40 @@ bob@gilgil.net 계정으로 자신의 git repository 주소를 알려 줄 것.
 
 /* Function Declaration */
 
-int getMacAddress(char * interface, char * buf);
+int 	getMacAddress(char * interface, char * buf);
+void 	get_remote_mac_address(char * ip);
 
 /* Function Declaration */
 
 
 
+/* Ethernet addresses are 6 bytes */
+#define ETHER_ADDR_LEN	6
+
+/* Ethernet header */
+struct sniff_ethernet {
+	u_char ether_dhost[ETHER_ADDR_LEN]; /* Destination host address */
+	u_char ether_shost[ETHER_ADDR_LEN]; /* Source host address */
+	u_short ether_type; /* IP? ARP? RARP? etc */
+};
+
 
 #define ARP_REQUEST 1	/* ARP Request */
 #define ARP_REPLY	2	/* ARP Reply */
-/*typedef struct arp_header
+typedef struct arp_header
 {
-	u_int16_t	htype;	*//* Hardware Type *//*
-	u_int16_t	ptype;	*//* Protocol Type*//*
-	u_char		hlen;	*//* Hardware Address Length *//*
-	u_char		plen;	*//* Protocol Address Length *//*
-	u_int16_t	oper;	*//* Operation Code *//*
-	u_char 		sha[6];	*//* Sender MAC address *//*
-	u_char 		spa[4];	*//* Sender IP address *//*
-	u_char 		tha[6];	*//* Target MAC address *//*
-	u_char 		tpa[4];	*//* Target IP address *//*
-};*/
-
-/* ARP Header */
-typedef struct _arp_hdr arp_hdr;
-struct _arp_hdr {
-	uint16_t htype;
-	uint16_t ptype;
-	uint8_t hlen;
-	uint8_t plen;
-	uint16_t opcode;
-	uint8_t sender_mac[6];
-	uint8_t sender_ip[4];
-	uint8_t target_mac[6];
-	uint8_t target_ip[4];
+	u_int16_t	htype;	 /* Hardware Type */
+	u_int16_t	ptype;	 /* Protocol Type */
+	u_char		hlen;	 /* Hardware Address Length */
+	u_char		plen;	 /* Protocol Address Length */
+	u_int16_t	oper;	 /* Operation Code */
+	u_char 		sha[6];	 /* Sender MAC address */
+	u_char 		spa[4];	 /* Sender IP address */
+	u_char 		tha[6];	 /* Target MAC address */
+	u_char 		tpa[4];	 /* Target IP address */
 };
+
+
 
 
 
@@ -160,6 +159,8 @@ int main(int argc,  char * argv[])
 
 
 
+
+
 int getMacAddress(char * interface, char * buf)
 {
 	char network_interface[NET_INF_LEN];
@@ -190,3 +191,10 @@ int getMacAddress(char * interface, char * buf)
 
 	return 0;
 }
+
+
+void get_remote_mac_address(char * ip)
+{
+
+}
+
