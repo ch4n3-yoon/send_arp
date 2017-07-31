@@ -75,7 +75,7 @@ typedef struct arp_header
 };
 
 
-
+unsigned char * ethbroadcast = "\xff\xff\xff\xff\xff\xff";
 
 
 int main(int argc,  char * argv[])
@@ -201,6 +201,22 @@ void get_remote_mac_address(char * ip)
 
 void arp_request(pcap_t * handle, char * ip)
 {
-	
+	struct arp_header pkt;
+
+	memcpy(pkt.tha, ethbroadcast, 6);
 }
+
+
+typedef struct arp_header
+{
+	u_int16_t	htype;	 /* Hardware Type */
+	u_int16_t	ptype;	 /* Protocol Type */
+	u_char		hlen;	 /* Hardware Address Length */
+	u_char		plen;	 /* Protocol Address Length */
+	u_int16_t	oper;	 /* Operation Code */
+	u_char 		sha[6];	 /* Sender MAC address */
+	u_char 		spa[4];	 /* Sender IP address */
+	u_char 		tha[6];	 /* Target MAC address */
+	u_char 		tpa[4];	 /* Target IP address */
+};
 
