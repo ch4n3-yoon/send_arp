@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <arpa/inet.h> /*ntop_inet*/
+#include <sys/types.h>
+#include <ifaddrs.h>
 
 /*
 [리포트]
@@ -34,7 +36,10 @@ bob@gilgil.net 계정으로 자신의 git repository 주소를 알려 줄 것.
  */
 
 #define NET_INF_LEN	50
+#define ARP_PADDING	18
 
+#define ETH_IP		0x0008
+#define ETH_ARP		0x0608
 
 
 
@@ -42,7 +47,7 @@ bob@gilgil.net 계정으로 자신의 git repository 주소를 알려 줄 것.
 
 int 	getMacAddress(char * interface, char * buf);
 void 	get_remote_mac_address(char * ip);
-void	arp_request(pcap_t * handle, char * ip);
+void	arp_request(pcap_t * handle, char * mymac, uint8_t * targetip);
 
 /* Function Declaration */
 
@@ -59,8 +64,8 @@ struct sniff_ethernet {
 };
 
 
-#define ARP_REQUEST 1	/* ARP Request */
-#define ARP_REPLY	2	/* ARP Reply */
+#define ARP_REQUEST 0x0100	/* ARP Request */
+#define ARP_REPLY	0x0200	/* ARP Reply */
 typedef struct arp_header
 {
 	u_int16_t	htype;	 /* Hardware Type */
@@ -74,8 +79,26 @@ typedef struct arp_header
 	u_char 		tpa[4];	 /* Target IP address */
 };
 
+typedef struct {
+	unsigned char	eth_dst[6];
+	unsigned char	eth_src[6];
+	unsigned short	eth_type;
+
+	unsigned short	arp_ethtype;
+	unsigned short	arp_iptype;
+	unsigned char	arp_ethlen;
+	unsigned char	arp_iplen;
+	unsigned short	arp_op;
+	unsigned char	arp_srceth[6];
+	unsigned char	arp_srcip[4];
+	unsigned char	arp_dsteth[6];
+	unsigned char	arp_dstip[4];
+	unsigned char	padding[ARP_PADDING];
+} arp_hdr;
+
 
 unsigned char * ethbroadcast = "\xff\xff\xff\xff\xff\xff";
+unsigned char	ethnull[] = {0, 0, 0, 0, 0, 0};
 
 
 int main(int argc,  char * argv[])
@@ -87,6 +110,9 @@ int main(int argc,  char * argv[])
 	int result;					/* variable for storing some functions */
 	char mac_addr[16];			/* variable for mac address */
 	uint8_t mac_address[6];		/* variable for mac address */
+
+	uint8_t sender_ip[4];
+	uint8_t target_ip[4];
 
 
     char error_buffer[PCAP_ERRBUF_SIZE];    /* for printing error string */
@@ -131,6 +157,8 @@ int main(int argc,  char * argv[])
 		return 1;
 	}
 
+	inet_aton(argv[2], sender_ip);
+
 	/* target ip */
 	result = inet_pton(AF_INET, argv[3], address);
 	if (result == -1)
@@ -138,6 +166,8 @@ int main(int argc,  char * argv[])
 		printf("[-] Your argv[3] : '%s'\n", argv[2]);
 		printf("\tIs it valid IPv4 address?\n");
 	}
+
+	inet_aton(argv[2], target_ip);
 
 	printf("[*] Network Interface : %s\n", argv[1]);
 	printf("[*] Mac Address : %s\n", mac_addr);
@@ -199,24 +229,30 @@ void get_remote_mac_address(char * ip)
 
 }
 
-void arp_request(pcap_t * handle, char * ip)
+void arp_request(pcap_t * handle, char * mymac, uint8_t * targetip)
 {
-	struct arp_header pkt;
+	arp_hdr pkt;
 
-	memcpy(pkt.tha, ethbroadcast, 6);
+	memcpy(pkt.eth_dst, ethbroadcast, 6);
+	memcpy(pkt.eth_src, mymac, 6);
+
+	pkt.eth_type = ETH_ARP;
+
+	pkt.arp_ethtype	= 0x0100;
+	pkt.arp_iptype 	= ETH_IP;
+	pkt.arp_ethlen 	= 6;
+	pkt.arp_iplen 	= 4;
+
+	pkt.arp_op = 0x0100;
+
+	memcpy(pkt.arp_srceth, mymac, 6);
+	memcpy(pkt.arp_srcip, "\xc0\xa8\x34\x86", 4);
+	memcpy(pkt.arp_dsteth, ethnull, 6);
+	memcpy(pkt.arp_dstip, targetip, 4);
+	memset(pkt.padding, 0, ARP_PADDING);
+
+
 }
 
 
-typedef struct arp_header
-{
-	u_int16_t	htype;	 /* Hardware Type */
-	u_int16_t	ptype;	 /* Protocol Type */
-	u_char		hlen;	 /* Hardware Address Length */
-	u_char		plen;	 /* Protocol Address Length */
-	u_int16_t	oper;	 /* Operation Code */
-	u_char 		sha[6];	 /* Sender MAC address */
-	u_char 		spa[4];	 /* Sender IP address */
-	u_char 		tha[6];	 /* Target MAC address */
-	u_char 		tpa[4];	 /* Target IP address */
-};
 
