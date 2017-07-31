@@ -89,6 +89,9 @@ int main(int argc,  char * argv[])
 	uint8_t mac_address[6];		/* variable for mac address */
 
 
+    char error_buffer[PCAP_ERRBUF_SIZE];    /* for printing error string */
+
+
 	/* check argv */
 	if (argc < 4)
 	{
@@ -97,6 +100,7 @@ int main(int argc,  char * argv[])
 		return 1;
 	}
 
+
 	/* Network Interface : Length limit */
 	if (strlen(argv[1]) > NET_INF_LEN)
 	{
@@ -104,11 +108,14 @@ int main(int argc,  char * argv[])
 		return 1;
 	}
 
+    /* if return value is -1, argv[1] is invalid network interface */
 	result = getMacAddress(argv[1], mac_addr);
 	if (result == -1)
 	{
 		return 1;
 	}
+
+
 
 	/* check whether ip address is valid */
 	/* sender ip */
@@ -134,10 +141,26 @@ int main(int argc,  char * argv[])
 
 
 
+    /* open network interface device */
+    if ( (fp= pcap_open(argv[1],            /* network device */
+                        100,
+                        PCAP_OPENFLAG_PROMISCUOUS,
+                        1000,
+                        NULL,
+                        errbuf              /* buffer for printing error */
+                        ) ) == NULL)
+    {
+        printf("Error : Can't open your network device '%s'\n", argv[1]);
+        return 1;
+    }
+
 
 
 	return 0;
 }
+
+
+
 
 int getMacAddress(char * interface, char * buf)
 {
