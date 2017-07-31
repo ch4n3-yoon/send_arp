@@ -171,6 +171,7 @@ int main(int argc,  char * argv[])
 
 	printf("[*] Network Interface : %s\n", argv[1]);
 	printf("[*] Mac Address : %s\n", mac_addr);
+	sscanf(mac_address, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", &mac_addr[0], &mac_addr[1], &mac_addr[2], &mac_addr[3], &mac_addr[4], &mac_addr[5]);
 
 
 
@@ -181,6 +182,9 @@ int main(int argc,  char * argv[])
 		printf("[-] Can not open your network device : %s\n", error_buffer);
 		return 1;
 	}
+
+
+	arp_request(handle, mac_address, target_ip);
 
 
 
@@ -220,6 +224,8 @@ int getMacAddress(char * interface, char * buf)
 		return -1;
 	}
 
+
+
 	return 0;
 }
 
@@ -251,6 +257,10 @@ void arp_request(pcap_t * handle, char * mymac, uint8_t * targetip)
 	memcpy(pkt.arp_dstip, targetip, 4);
 	memset(pkt.padding, 0, ARP_PADDING);
 
+	if ( pcap_sendpacket(handle, (unsigned char *)&pkt, sizeof(pkt)) != 0)
+	{
+		fprintf(stderr, "[*] Error  \n", pcap_geterr(handle));
+	}
 
 }
 
