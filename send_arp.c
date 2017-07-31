@@ -92,6 +92,9 @@ int main(int argc,  char * argv[])
     char error_buffer[PCAP_ERRBUF_SIZE];    /* for printing error string */
 
 
+    pcap_t * handle;	/* create handle */
+
+
 	/* check argv */
 	if (argc < 4)
 	{
@@ -141,18 +144,13 @@ int main(int argc,  char * argv[])
 
 
 
-    /* open network interface device */
-    if ( (fp= pcap_open(argv[1],            /* network device */
-                        100,
-                        PCAP_OPENFLAG_PROMISCUOUS,
-                        1000,
-                        NULL,
-                        errbuf              /* buffer for printing error */
-                        ) ) == NULL)
-    {
-        printf("Error : Can't open your network device '%s'\n", argv[1]);
-        return 1;
-    }
+	/* open network device */
+	handle = pcap_open_live(argv[1], 100, 1, 1000, error_buffer);
+	if (handle == NULL)
+	{
+		printf("[-] Can not open your network device : %s\n", error_buffer);
+		return 1;
+	}
 
 
 
